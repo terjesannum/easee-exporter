@@ -13,6 +13,36 @@ entries:
         - title: Grafana dashboard
           url: https://raw.githubusercontent.com/terjesannum/easee-exporter/master/grafana/dashboard.png
     apiVersion: v2
+    created: "2023-03-23T21:48:18.576242917Z"
+    description: Easee prometheus exporter
+    digest: 846a5dcf5d61e0ca8732d7307dbe928e7aaa1ce918fd58159b11efc8b2786957
+    home: https://github.com/terjesannum/easee-exporter
+    keywords:
+    - easee
+    - prometheus
+    - grafana
+    - monitoring
+    maintainers:
+    - email: terje@offpiste.org
+      name: Terje Sannum
+      url: https://github.com/terjesannum
+    name: easee-exporter
+    type: application
+    urls:
+    - https://github.com/terjesannum/easee-exporter/releases/download/easee-exporter-1.0.0/easee-exporter-1.0.0.tgz
+    version: 1.0.0
+  - annotations:
+      artifacthub.io/images: |
+        - name: easee-exporter
+          image: ghcr.io/terjesannum/easee-exporter:latest
+          platforms:
+            - linux/amd64
+            - linux/arm64
+            - linux/arm/v7
+      artifacthub.io/screenshots: |
+        - title: Grafana dashboard
+          url: https://raw.githubusercontent.com/terjesannum/easee-exporter/master/grafana/dashboard.png
+    apiVersion: v2
     created: "2023-03-23T19:59:32.462560625Z"
     description: Easee prometheus exporter
     digest: c7a9d2d950bb6fa65089675d9006a0c97d8fdad3d7c80223da68aaf33dd7e81a
@@ -31,4 +61,4 @@ entries:
     urls:
     - https://github.com/terjesannum/easee-exporter/releases/download/easee-exporter-0.1.0/easee-exporter-0.1.0.tgz
     version: 0.1.0
-generated: "2023-03-23T19:59:32.462567225Z"
+generated: "2023-03-23T21:48:18.576254717Z"
