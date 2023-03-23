@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+
+  easee-exporter:
+    image: ghcr.io/terjesannum/easee-exporter:latest
+    ports:
+      - "8080:8080"
+    networks:
+      - easee
+    environment:
+      EASEE_USERNAME: $EASEE_USERNAME
+      EASEE_PASSWORD: $EASEE_PASSWORD
+    restart: always
+
+  prometheus:
+    image: prom/prometheus:v2.42.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - easee
+    restart: always
+
+  grafana:
+    image: grafana/grafana:9.4.3
+    volumes:
+      - ./datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml
+      - ./dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml
+      - ../grafana/dashboard.json:/dashboard.json
+      - ./grafana.sh:/grafana.sh
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - easee
+    entrypoint:
+      - /grafana.sh
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: true
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Editor
+    restart: always
+    
+networks:
+  easee: {}
+
+volumes:
+  grafana_data: {}
+  prometheus_data: {}
