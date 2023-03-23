@@ -1,0 +1,26 @@
+apiVersion: v2
+name: easee-exporter
+version: 0.1.0
+description: Easee prometheus exporter
+type: application
+keywords:
+  - easee
+  - prometheus
+  - grafana
+  - monitoring
+home: https://github.com/terjesannum/easee-exporter
+maintainers:
+  - name: Terje Sannum
+    email: terje@offpiste.org
+    url: https://github.com/terjesannum
+annotations:
+  artifacthub.io/images: |
+    - name: easee-exporter
+      image: ghcr.io/terjesannum/easee-exporter:latest
+      platforms:
+        - linux/amd64
+        - linux/arm64
+        - linux/arm/v7
+  artifacthub.io/screenshots: |
+    - title: Grafana dashboard
+      url: https://raw.githubusercontent.com/terjesannum/easee-exporter/master/grafana/dashboard.png

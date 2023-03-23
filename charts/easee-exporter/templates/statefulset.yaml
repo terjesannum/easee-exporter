@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "easee-exporter.fullname" . }}
+  labels:
+    {{- include "easee-exporter.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "easee-exporter.fullname" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "easee-exporter.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- if not .Values.serviceMonitor.enabled }}
+        prometheus.io/scrape: 'true'
+        {{- end }}
+        {{- if .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "easee-exporter.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: easee-exporter
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.Version }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          env:
+            - name: EASEE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ include "easee-exporter.fullname" . }}"
+                  key: username
+            - name: EASEE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ include "easee-exporter.fullname" . }}"
+                  key: password
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

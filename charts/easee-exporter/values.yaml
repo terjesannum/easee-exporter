@@ -1,0 +1,36 @@
+username: ""
+password: ""
+
+serviceMonitor:
+  enabled: false
+  labels: {}
+  interval: 1m
+  scrapeTimeout: 10s
+  
+image:
+  repository: ghcr.io/terjesannum/easee-exporter
+  # Override image tag (default is chart version)
+  tag: ""
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65532
+  allowPrivilegeEscalation: false
+
+resources: {}
+  # limits:
+  #   cpu: 20m
+  #   memory: 32Mi
+  # requests:
+  #   cpu: 10m
+  #   memory: 32Mi
