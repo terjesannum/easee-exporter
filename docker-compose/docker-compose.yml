@@ -7,7 +7,7 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - easee
+      - prometheus
     environment:
       EASEE_USERNAME: $EASEE_USERNAME
       EASEE_PASSWORD: $EASEE_PASSWORD
@@ -21,7 +21,7 @@ services:
     ports:
       - "9090:9090"
     networks:
-      - easee
+      - prometheus
     restart: always
 
   grafana:
@@ -35,7 +35,7 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - easee
+      - prometheus
     entrypoint:
       - /grafana.sh
     environment:
@@ -44,7 +44,7 @@ services:
     restart: always
     
 networks:
-  easee: {}
+  prometheus: {}
 
 volumes:
   grafana_data: {}
