@@ -21,7 +21,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "9.3.6"
+      "version": "9.5.2"
     },
     {
       "type": "datasource",
@@ -106,8 +106,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "semi-dark-red",
+                "color": "transparent",
                 "value": null
+              },
+              {
+                "color": "semi-dark-red",
+                "value": 0
               },
               {
                 "color": "semi-dark-green",
@@ -139,7 +143,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -204,7 +208,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -281,7 +285,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -358,7 +362,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -422,7 +426,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -497,9 +501,10 @@
         "showUnfilled": true,
         "text": {
           "titleSize": 16
-        }
+        },
+        "valueMode": "color"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -562,9 +567,10 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "valueMode": "color"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -639,7 +645,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -718,7 +724,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -754,10 +760,6 @@
               {
                 "color": "semi-dark-green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
@@ -786,7 +788,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -795,14 +797,14 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "easee_charger_session_energy{charger=\"$charger\"}",
+          "expr": "sum(increase(easee_charger_session_energy{charger=\"$charger\"}[$__range]))",
           "instant": true,
           "legendFormat": "Current {{a}}",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Charged this/last session",
+      "title": "Charged selected period",
       "type": "stat"
     },
     {
@@ -1003,7 +1005,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -1176,7 +1178,7 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 7,
+        "w": 3,
         "x": 17,
         "y": 11
       },
@@ -1195,7 +1197,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -1212,6 +1214,70 @@
         }
       ],
       "title": "Charging power",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "semi-dark-green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 11
+      },
+      "id": 30,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "easee_charger_session_energy{charger=\"$charger\"}",
+          "instant": true,
+          "legendFormat": "Current {{a}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Charged this/last session",
       "type": "stat"
     },
     {
@@ -1402,7 +1468,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -1495,7 +1561,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 3,
         "w": 2,
         "x": 22,
         "y": 16
@@ -1513,12 +1579,10 @@
           "fields": "",
           "values": false
         },
-        "text": {
-          "valueSize": 48
-        },
-        "textMode": "auto"
+        "text": {},
+        "textMode": "value"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -1612,7 +1676,7 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 5,
+        "w": 7,
         "x": 17,
         "y": 19
       },
@@ -1634,7 +1698,7 @@
         },
         "textMode": "value"
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -1654,7 +1718,7 @@
     }
   ],
   "refresh": "1m",
-  "schemaVersion": 37,
+  "schemaVersion": 38,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -1692,6 +1756,6 @@
   "timezone": "",
   "title": "Easee",
   "uid": "BocNBpTVz",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
