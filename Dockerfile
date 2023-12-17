@@ -1,16 +1,13 @@
-FROM golang:1.21.4-alpine3.18 as builder
+FROM golang:1.21.5-alpine3.19 as builder
 
 RUN apk --update add ca-certificates
 RUN echo 'easee:*:65532:' > /tmp/group && \
     echo 'easee:*:65532:65532:easee:/:/easee-exporter' > /tmp/passwd
 
 WORKDIR /workspace
-COPY go.* ./
-RUN go mod download
-
 COPY . /workspace
 
-RUN CGO_ENABLED=0 go build -a -o easee-exporter .
+RUN make build
 
 FROM scratch
 
