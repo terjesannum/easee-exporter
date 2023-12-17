@@ -1,6 +1,6 @@
 FROM golang:1.21.5-alpine3.19 as builder
 
-RUN apk --update add ca-certificates
+RUN apk --update add ca-certificates make git
 RUN echo 'easee:*:65532:' > /tmp/group && \
     echo 'easee:*:65532:65532:easee:/:/easee-exporter' > /tmp/passwd
 
