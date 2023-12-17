@@ -11,6 +11,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/version"
 	"github.com/terjesannum/easee-exporter/internal/easee"
 	"github.com/terjesannum/easee-exporter/internal/metrics"
 )
@@ -19,12 +20,14 @@ var (
 	username      string
 	password      string
 	listenAddress string
+	showVersion   bool
 )
 
 func init() {
 	flag.StringVar(&username, "username", os.Getenv("EASEE_USERNAME"), "Easee username")
 	flag.StringVar(&password, "password", os.Getenv("EASEE_PASSWORD"), "Easee password")
 	flag.StringVar(&listenAddress, "listen-address", ":8080", "Address to listen on for HTTP requests (defaults to :8080)")
+	flag.BoolVar(&showVersion, "version", false, "Print version information and exit")
 	flag.Parse()
 }
 
@@ -44,6 +47,11 @@ func updateChargerState(client *easee.Client, charger easee.Charger, collector *
 }
 
 func main() {
+	if showVersion {
+		fmt.Printf("%s\n", version.Print("easee-exporter"))
+		os.Exit(0)
+	}
+	log.Printf("Starting easee-exporter %s\n", version.Version)
 	ctx := context.Background()
 	client := easee.NewClient(ctx, username, password)
 	chargers, err := client.Chargers()
@@ -70,6 +78,7 @@ func main() {
 			}
 		}(c)
 	}
+	prometheus.MustRegister(version.NewCollector("easee_exporter"))
 	log.Println("Starting http listener")
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Easee prometheus exporter")
