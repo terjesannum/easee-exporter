@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	promver "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"github.com/terjesannum/easee-exporter/internal/easee"
@@ -78,7 +79,7 @@ func main() {
 			}
 		}(c)
 	}
-	prometheus.MustRegister(version.NewCollector("easee_exporter"))
+	prometheus.MustRegister(promver.NewCollector("easee_exporter"))
 	log.Println("Starting http listener")
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Easee prometheus exporter")
