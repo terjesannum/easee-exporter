@@ -1,4 +1,4 @@
-FROM golang:1.24.1-alpine3.21 AS builder
+FROM golang:1.24.5-alpine3.22 AS builder
 
 RUN apk --update add ca-certificates make git
 RUN echo 'easee:*:65532:' > /tmp/group && \
