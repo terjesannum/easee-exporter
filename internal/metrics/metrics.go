@@ -28,16 +28,13 @@ type ChargerStateCollector struct {
 	totalAllocatedPhaseCurrent *prometheus.Desc
 	totalPhaseCurrent          *prometheus.Desc
 	noCurrentReason            *prometheus.Desc
-	wifiAPEnabled              *prometheus.Desc
 	lifetimeEnergy             *prometheus.Desc
 	offlineMaxCircuitCurrent   *prometheus.Desc
 	errorCode                  *prometheus.Desc
-	faultErrorCode             *prometheus.Desc
 	eqAvailableCurrent         *prometheus.Desc
 	deratedCurrent             *prometheus.Desc
 	deratingActive             *prometheus.Desc
 	connectedToCloud           *prometheus.Desc
-	isOnline                   *prometheus.Desc
 	voltage                    *prometheus.Desc
 	latestPulse                *prometheus.Desc
 }
@@ -170,12 +167,6 @@ func NewChargerStateCollector(charger string) *ChargerStateCollector {
 			nil,
 			prometheus.Labels{"charger": charger},
 		),
-		wifiAPEnabled: prometheus.NewDesc(
-			"easee_charger_wifi_access_point_enabled",
-			"Access point enabled",
-			nil,
-			prometheus.Labels{"charger": charger},
-		),
 		lifetimeEnergy: prometheus.NewDesc(
 			"easee_charger_lifetime_energy",
 			"Lifetime energy",
@@ -191,12 +182,6 @@ func NewChargerStateCollector(charger string) *ChargerStateCollector {
 		errorCode: prometheus.NewDesc(
 			"easee_charger_error_code",
 			"Error code",
-			nil,
-			prometheus.Labels{"charger": charger},
-		),
-		faultErrorCode: prometheus.NewDesc(
-			"easee_charger_fault_error_code",
-			"Fault error code",
 			nil,
 			prometheus.Labels{"charger": charger},
 		),
@@ -221,12 +206,6 @@ func NewChargerStateCollector(charger string) *ChargerStateCollector {
 		connectedToCloud: prometheus.NewDesc(
 			"easee_charger_cloud_connection",
 			"Cloud connection",
-			nil,
-			prometheus.Labels{"charger": charger},
-		),
-		isOnline: prometheus.NewDesc(
-			"easee_charger_online",
-			"Charger online",
 			nil,
 			prometheus.Labels{"charger": charger},
 		),
@@ -267,16 +246,13 @@ func (c *ChargerStateCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.totalAllocatedPhaseCurrent
 	ch <- c.totalPhaseCurrent
 	ch <- c.noCurrentReason
-	ch <- c.wifiAPEnabled
 	ch <- c.lifetimeEnergy
 	ch <- c.offlineMaxCircuitCurrent
 	ch <- c.errorCode
-	ch <- c.faultErrorCode
 	ch <- c.eqAvailableCurrent
 	ch <- c.deratedCurrent
 	ch <- c.deratingActive
 	ch <- c.connectedToCloud
-	ch <- c.isOnline
 	ch <- c.voltage
 	ch <- c.latestPulse
 }
@@ -607,13 +583,6 @@ func (c *ChargerStateCollector) Collect(ch chan<- prometheus.Metric) {
 				float64(*c.chargerState.ReasonForNoCurrent),
 			)
 		}
-		if c.chargerState.WifiAPEnabled != nil {
-			ch <- prometheus.MustNewConstMetric(
-				c.wifiAPEnabled,
-				prometheus.GaugeValue,
-				b2f[*c.chargerState.WifiAPEnabled],
-			)
-		}
 		if c.chargerState.LifeTimeEnergy != nil {
 			ch <- prometheus.MustNewConstMetric(
 				c.lifetimeEnergy,
@@ -650,13 +619,6 @@ func (c *ChargerStateCollector) Collect(ch chan<- prometheus.Metric) {
 				c.errorCode,
 				prometheus.GaugeValue,
 				float64(*c.chargerState.ErrorCode),
-			)
-		}
-		if c.chargerState.FaultErrorCode != nil {
-			ch <- prometheus.MustNewConstMetric(
-				c.faultErrorCode,
-				prometheus.GaugeValue,
-				float64(*c.chargerState.FaultErrorCode),
 			)
 		}
 		if c.chargerState.EqAvailableCurrentP1 != nil {
@@ -702,13 +664,6 @@ func (c *ChargerStateCollector) Collect(ch chan<- prometheus.Metric) {
 				c.connectedToCloud,
 				prometheus.GaugeValue,
 				b2f[*c.chargerState.ConnectedToCloud],
-			)
-		}
-		if c.chargerState.IsOnline != nil {
-			ch <- prometheus.MustNewConstMetric(
-				c.isOnline,
-				prometheus.GaugeValue,
-				b2f[*c.chargerState.IsOnline],
 			)
 		}
 		if c.chargerState.Voltage != nil {

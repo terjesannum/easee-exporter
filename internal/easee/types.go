@@ -8,6 +8,9 @@ type Charger struct {
 	ProductCode int    `json:"productCode"`
 }
 
+// ChargerState is assembled from the observations API. LatestPulse and Voltage
+// are derived rather than observed; the json tags record the field names
+// the removed /api/chargers/{id}/state endpoint used.
 type ChargerState struct {
 	SmartCharging                                *bool      `json:"smartCharging"`
 	CableLocked                                  *bool      `json:"cableLocked"`
@@ -32,7 +35,6 @@ type ChargerState struct {
 	InCurrentT4                                  *float64   `json:"inCurrentT4"`
 	InCurrentT5                                  *float64   `json:"inCurrentT5"`
 	OutputCurrent                                *float64   `json:"outputCurrent"`
-	IsOnline                                     *bool      `json:"isOnline"`
 	InVoltageT1T2                                *float64   `json:"inVoltageT1T2"`
 	InVoltageT1T3                                *float64   `json:"inVoltageT1T3"`
 	InVoltageT1T4                                *float64   `json:"inVoltageT1T4"`
@@ -53,13 +55,11 @@ type ChargerState struct {
 	CircuitTotalPhaseConductorCurrentL2          *float64   `json:"circuitTotalPhaseConductorCurrentL2"`
 	CircuitTotalPhaseConductorCurrentL3          *float64   `json:"circuitTotalPhaseConductorCurrentL3"`
 	ReasonForNoCurrent                           *int       `json:"reasonForNoCurrent"`
-	WifiAPEnabled                                *bool      `json:"wiFiAPEnabled"`
 	LifeTimeEnergy                               *float64   `json:"lifetimeEnergy"`
 	OfflineMaxCircuitCurrentP1                   *int       `json:"offlineMaxCircuitCurrentP1"`
 	OfflineMaxCircuitCurrentP2                   *int       `json:"offlineMaxCircuitCurrentP2"`
 	OfflineMaxCircuitCurrentP3                   *int       `json:"offlineMaxCircuitCurrentP3"`
 	ErrorCode                                    *int       `json:"errorCode"`
-	FaultErrorCode                               *int       `json:"faultErrorCode"`
 	EqAvailableCurrentP1                         *float64   `json:"eqAvailableCurrentP1"`
 	EqAvailableCurrentP2                         *float64   `json:"eqAvailableCurrentP2"`
 	EqAvailableCurrentP3                         *float64   `json:"eqAvailableCurrentP3"`

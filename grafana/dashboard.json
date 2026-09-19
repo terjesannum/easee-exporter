@@ -152,7 +152,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "easee_charger_online{charger=\"$charger\"}",
+          "expr": "easee_charger_cloud_connection{charger=\"$charger\"}",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
@@ -1729,7 +1729,7 @@
           "type": "prometheus",
           "uid": "${DS_PROMETHEUS}"
         },
-        "definition": "label_values(easee_charger_online, charger)",
+        "definition": "label_values(easee_charger_cloud_connection, charger)",
         "hide": 0,
         "includeAll": false,
         "label": "Charger",
@@ -1737,7 +1737,7 @@
         "name": "charger",
         "options": [],
         "query": {
-          "query": "label_values(easee_charger_online, charger)",
+          "query": "label_values(easee_charger_cloud_connection, charger)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,

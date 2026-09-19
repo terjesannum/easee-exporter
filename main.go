@@ -50,7 +50,10 @@ func exit(format string, v ...any) {
 func updateChargerState(client *easee.Client, charger easee.Charger, collector *metrics.ChargerStateCollector) {
 	state, err := client.ChargerState(charger.Id)
 	if err != nil {
-		exit("Charger state request failed: %v\n", err)
+		// Keep serving the last known state: exiting here restarts the
+		// process, and the repeated logins burn through the API rate limit.
+		log.Printf("Charger state request failed for %s: %v\n", charger.Id, err)
+		return
 	}
 	collector.UpdateState(&state)
 	log.Printf("Updated charger state for %s\n", charger.Id)

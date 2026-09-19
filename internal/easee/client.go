@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,6 +18,9 @@ import (
 
 const (
 	apiUrl = "https://api.easee.cloud"
+	// The observations API that replaces /api/chargers/{id}/state is served
+	// from api.easee.com.
+	stateApiUrl = "https://api.easee.com"
 )
 
 type Client struct {
@@ -70,9 +75,11 @@ func (c *Client) getToken(endpoint string, data interface{}) error {
 		TokenType    string `json:"tokenType"`
 		RefreshToken string `json:"refreshToken"`
 	}
-	c.doRequest(endpoint, data, &auth)
+	if err := c.doRequest(fmt.Sprintf("%s%s", apiUrl, endpoint), data, &auth); err != nil {
+		return err
+	}
 	if auth.ExpiresIn == 0 {
-		return errors.New("Getting token failed")
+		return errors.New("Getting token failed: no expiry in response")
 	}
 	c.token = &oauth2.Token{
 		AccessToken:  auth.AccessToken,
@@ -83,33 +90,52 @@ func (c *Client) getToken(endpoint string, data interface{}) error {
 	return nil
 }
 
-func (c *Client) doRequest(endpoint string, body, result interface{}) error {
+func (c *Client) doRequest(url string, body, result interface{}) error {
 	var res *http.Response
 	var err error
 	if body == nil {
-		res, err = c.HttpClient.Get(fmt.Sprintf("%s%s", apiUrl, endpoint))
+		res, err = c.HttpClient.Get(url)
 	} else {
-		reqBody, err := json.Marshal(body)
-		if err == nil {
-			res, err = http.Post(fmt.Sprintf("%s%s", apiUrl, endpoint), "application/json", bytes.NewBuffer(reqBody))
+		var reqBody []byte
+		if reqBody, err = json.Marshal(body); err != nil {
+			return err
 		}
+		// Deliberately not c.HttpClient: this is the token request itself, and
+		// the oauth2 client would call back into Token to authenticate it.
+		res, err = http.Post(url, "application/json", bytes.NewBuffer(reqBody))
 	}
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
+	// Without this, an error response decodes into result and surfaces as a
+	// confusing json error instead of the status the API actually returned.
+	if res.StatusCode < 200 || res.StatusCode > 299 {
+		msg, _ := io.ReadAll(io.LimitReader(res.Body, 512))
+		return fmt.Errorf("%s returned %s: %s", url, res.Status, strings.TrimSpace(string(msg)))
+	}
 	dec := json.NewDecoder(res.Body)
-	return dec.Decode(&result)
+	return dec.Decode(result)
 }
 
 func (c *Client) Chargers() ([]Charger, error) {
 	var chargers []Charger
-	err := c.doRequest("/api/chargers", nil, &chargers)
+	err := c.doRequest(fmt.Sprintf("%s/api/chargers", apiUrl), nil, &chargers)
 	return chargers, err
 }
 
+// ChargerState reads a charger's state from the observations API. It replaces
+// /api/chargers/{id}/state, which was removed on 2026-09-01. All observations
+// are requested in one call to stay well inside the endpoint's rate limit of
+// 100 requests per 5 minutes.
 func (c *Client) ChargerState(charger string) (ChargerState, error) {
-	var state ChargerState
-	err := c.doRequest(fmt.Sprintf("/api/chargers/%s/state", charger), nil, &state)
-	return state, err
+	var res observationsResponse
+	if err := c.doRequest(chargerStateUrl(charger), nil, &res); err != nil {
+		return ChargerState{}, err
+	}
+	return newChargerState(&res), nil
+}
+
+func chargerStateUrl(charger string) string {
+	return fmt.Sprintf("%s/state/%s/observations?ids=%s", stateApiUrl, charger, chargerStateObservationIds)
 }
