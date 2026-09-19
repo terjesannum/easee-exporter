@@ -1,11 +1,17 @@
 package metrics
 
 import (
+	"log"
+	"sync"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/terjesannum/easee-exporter/internal/easee"
 )
 
 type ChargerStateCollector struct {
+	// State is written by whichever ingestion source is running and read by
+	// the Prometheus handler on every scrape, so both sides take the lock.
+	mu                         sync.Mutex
 	chargerState               *easee.ChargerState
 	smartCharging              *prometheus.Desc
 	cableLocked                *prometheus.Desc
@@ -258,6 +264,8 @@ func (c *ChargerStateCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *ChargerStateCollector) Collect(ch chan<- prometheus.Metric) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	b2f := map[bool]float64{true: 1}
 	if c.chargerState != nil {
 		if c.chargerState.SmartCharging != nil {
@@ -684,5 +692,22 @@ func (c *ChargerStateCollector) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (c *ChargerStateCollector) UpdateState(state *easee.ChargerState) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.chargerState = state
+}
+
+// ApplyObservation folds a single streamed observation into the state,
+// starting from whatever is already known rather than replacing it: the
+// stream sends one observation at a time, so a replacement would leave every
+// other metric empty until it happened to be sent again.
+func (c *ChargerStateCollector) ApplyObservation(o *easee.Observation) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.chargerState == nil {
+		c.chargerState = &easee.ChargerState{}
+	}
+	if err := c.chargerState.Apply(o); err != nil {
+		log.Printf("Ignoring observation: %v\n", err)
+	}
 }
