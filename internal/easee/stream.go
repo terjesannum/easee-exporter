@@ -147,20 +147,15 @@ func (s *Stream) applyObservation(o *Observation) {
 	s.apply(o.Mid, o)
 }
 
-// signalrLogger keeps the SignalR library quiet. Left to itself it debug
-// logs every frame to stderr, which runs to hundreds of kilobytes per
-// connection and buries the exporter's own output. Only entries carrying an
-// error are passed through; connection state is reported by the stream
-// metrics instead.
+// signalrLogger forwards the SignalR library's info log. Passing it with
+// debug off is what keeps the library quiet: without a logger it debug logs
+// every frame to stderr, hundreds of kilobytes per connection. The info log
+// is low volume and must not be filtered further, since reconnect failures
+// are logged under "connect" rather than "error".
 type signalrLogger struct{}
 
 func (signalrLogger) Log(keyVals ...any) error {
-	for i := 0; i+1 < len(keyVals); i += 2 {
-		if fmt.Sprint(keyVals[i]) == "error" {
-			log.Printf("Stream error: %v\n", keyVals[i+1])
-			return nil
-		}
-	}
+	log.Println(append([]any{"Stream:"}, keyVals...)...)
 	return nil
 }
 
