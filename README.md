@@ -6,7 +6,15 @@ Monitor your Easee EV charger with Prometheus and Grafana.
 
 ## Description
 
-This prometheus exporter will connect to the Easee cloud service, periodically fetch charger state and make the metrics available for Prometheus.
+This prometheus exporter will connect to the Easee cloud service, fetch charger state and make the metrics available for Prometheus.
+
+By default state is read from Easee's observation stream: every charger shares a single connection and updates are pushed as they happen, so the exporter makes almost no API requests no matter how many chargers you have. A slow poll runs alongside it to correct anything the stream misses. Pass `-ingestion poll` (or set `EASEE_INGESTION=poll`) to read state by polling the API instead, which costs one request per charger per interval. Both produce exactly the same metrics.
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-ingestion` | `stream` | Where charger state comes from: `stream` or `poll` |
+| `-poll-interval` | `1m` | How often to poll charger state with `-ingestion=poll` |
+| `-reconcile-interval` | `15m` | How often to reconcile streamed state with a poll; `0` disables |
 
 See the provided [Grafana dashboard](grafana/dashboard.json) for examples on how they can be used.
 

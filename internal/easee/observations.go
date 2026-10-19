@@ -10,15 +10,60 @@ import (
 	"time"
 )
 
-// Observation is a single value reported by a charger, as returned by
-// /state/{serialNumber}/observations. Value is typed by DataType
-// (2=Boolean, 3=Double, 4=Integer, 5=Position, 6=String), so it is kept raw
-// and decoded by the field it maps to.
+// Observation is a single value reported by a charger. Value is typed by
+// DataType (2=Boolean, 3=Double, 4=Integer, 5=Position, 6=String), so it is
+// kept raw and decoded by the field it maps to.
+//
+// The two transports frame values differently: the observations endpoint
+// sends native json types, the stream sends every value as a string. Mid
+// identifies the charger and is only set by the stream.
 type Observation struct {
+	Mid       string          `json:"mid"`
 	Id        int             `json:"id"`
 	Timestamp time.Time       `json:"timestamp"`
 	DataType  int             `json:"dataType"`
 	Value     json.RawMessage `json:"value"`
+}
+
+// number reads a numeric value in either framing.
+func (o *Observation) number() (float64, error) {
+	var f float64
+	if err := json.Unmarshal(o.Value, &f); err == nil {
+		return f, nil
+	}
+	var s string
+	if err := json.Unmarshal(o.Value, &s); err != nil {
+		return 0, fmt.Errorf("observation %d: not a number: %s", o.Id, o.Value)
+	}
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, fmt.Errorf("observation %d: %w", o.Id, err)
+	}
+	return f, nil
+}
+
+// boolean reads a boolean in either framing. The stream sends them as "0"
+// and "1" rather than as json booleans.
+func (o *Observation) boolean() (bool, error) {
+	var b bool
+	if err := json.Unmarshal(o.Value, &b); err == nil {
+		return b, nil
+	}
+	var s string
+	if err := json.Unmarshal(o.Value, &s); err != nil {
+		return false, fmt.Errorf("observation %d: not a boolean: %s", o.Id, o.Value)
+	}
+	switch s {
+	case "0":
+		return false, nil
+	case "1":
+		return true, nil
+	}
+	b, err := strconv.ParseBool(s)
+	if err != nil {
+		return false, fmt.Errorf("observation %d: %w", o.Id, err)
+	}
+	return b, nil
 }
 
 type observationsResponse struct {
@@ -26,20 +71,20 @@ type observationsResponse struct {
 }
 
 func (o *Observation) decodeBool(dst **bool) error {
-	var v bool
-	if err := json.Unmarshal(o.Value, &v); err != nil {
-		return fmt.Errorf("observation %d: %w", o.Id, err)
+	v, err := o.boolean()
+	if err != nil {
+		return err
 	}
 	*dst = &v
 	return nil
 }
 
 // decodeInt and decodeFloat both go through float64 so that an observation
-// documented as Integer still decodes if the API reports it as a double.
+// documented as Integer still decodes if it is reported as a double.
 func (o *Observation) decodeInt(dst **int) error {
-	var v float64
-	if err := json.Unmarshal(o.Value, &v); err != nil {
-		return fmt.Errorf("observation %d: %w", o.Id, err)
+	v, err := o.number()
+	if err != nil {
+		return err
 	}
 	i := int(v)
 	*dst = &i
@@ -47,9 +92,9 @@ func (o *Observation) decodeInt(dst **int) error {
 }
 
 func (o *Observation) decodeFloat(dst **float64) error {
-	var v float64
-	if err := json.Unmarshal(o.Value, &v); err != nil {
-		return fmt.Errorf("observation %d: %w", o.Id, err)
+	v, err := o.number()
+	if err != nil {
+		return err
 	}
 	*dst = &v
 	return nil
@@ -149,24 +194,32 @@ func observationIds(observations map[int]observationDecoder) string {
 // newChargerState folds an observations response into a ChargerState. A value
 // that fails to decode is skipped rather than failing the whole update, so one
 // unexpected observation cannot blank out every metric for a charger.
+// Apply folds a single observation into the state. Observations the exporter
+// does not use are ignored rather than reported as errors: the stream sends
+// every observation a charger has, most of which back no metric.
+func (s *ChargerState) Apply(o *Observation) error {
+	decode, ok := chargerStateObservations[o.Id]
+	if !ok {
+		return nil
+	}
+	if err := decode(s, o); err != nil {
+		return err
+	}
+	if s.LatestPulse == nil || o.Timestamp.After(*s.LatestPulse) {
+		t := o.Timestamp
+		s.LatestPulse = &t
+	}
+	s.Voltage = maxInVoltage(s)
+	return nil
+}
+
 func newChargerState(res *observationsResponse) ChargerState {
 	var state ChargerState
 	for i := range res.Observations {
-		o := &res.Observations[i]
-		decode, ok := chargerStateObservations[o.Id]
-		if !ok {
-			continue
-		}
-		if err := decode(&state, o); err != nil {
+		if err := state.Apply(&res.Observations[i]); err != nil {
 			log.Printf("Ignoring observation: %v\n", err)
-			continue
-		}
-		if state.LatestPulse == nil || o.Timestamp.After(*state.LatestPulse) {
-			t := o.Timestamp
-			state.LatestPulse = &t
 		}
 	}
-	state.Voltage = maxInVoltage(&state)
 	return state
 }
 
